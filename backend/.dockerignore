@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/logs/
+**/wwwroot/uploads/*
+!**/wwwroot/uploads/.gitkeep
+**/appsettings.Development.json
+AssignmentSystem.Api.Tests/
+Database/
+*.md

@@ -1,0 +1,33 @@
+# Render Blueprint for the backend API. See DEPLOYMENT.md for the full step-by-step walkthrough
+# (this file alone doesn't configure Neon/Vercel/env var values — those still need manual setup).
+#
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: assignment-system-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/AssignmentSystem.Api/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /swagger/index.html
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Set these manually in the Render dashboard (Environment tab) instead of committing real
+      # values here — `sync: false` means "Render will prompt for this, not read it from this file".
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: AssignmentSystem
+      - key: Jwt__Audience
+        value: AssignmentSystemClient
+      - key: Jwt__ExpiryHours
+        value: "4"
+      # The deployed Vercel frontend URL, e.g. https://your-app.vercel.app — set after the frontend
+      # is deployed (see DEPLOYMENT.md step 4). Add a second Cors__AllowedOrigins__1 var the same way
+      # if you also need to allow a Vercel preview-deployment URL.
+      - key: Cors__AllowedOrigins__0
+        sync: false

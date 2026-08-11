@@ -1,0 +1,17 @@
+## .NET
+bin/
+obj/
+*.user
+appsettings.Development.json
+
+## Logs
+logs/
+
+## Uploaded files
+AssignmentSystem.Api/wwwroot/uploads/*
+!AssignmentSystem.Api/wwwroot/uploads/.gitkeep
+
+## IDE
+.vs/
+.vscode/
+*.suo
