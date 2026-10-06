@@ -4,7 +4,7 @@ A role-based (Admin / Teacher / Student) assignment and submission management sy
 college. Teachers create assignments for a class/subject, students submit answers, and teachers grade
 submissions and leave feedback.
 
-> New to this codebase? [`IMPLEMENTATION_GUIDE.md`](IMPLEMENTATION_GUIDE.md) walks through how the
+> New to this codebase? [`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md) walks through how the
 > backend and frontend are actually built — request flow, auth pattern, where each business rule
 > lives — this README covers setup and *what*, that guide covers *how*.
 
@@ -121,7 +121,7 @@ method.
 ## Docker
 
 Backend and frontend are deployed to **two separate platforms** (Render and Vercel — see
-[`DEPLOYMENT.md`](DEPLOYMENT.md)), so each app owns its own, self-contained Dockerfile instead of a
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)), so each app owns its own, self-contained Dockerfile instead of a
 shared root-level compose file that would imply they run together — they don't, in production.
 
 - **`backend/AssignmentSystem.Api/Dockerfile`** — multi-stage build producing the image Render actually
@@ -183,7 +183,7 @@ dotnet run --project AssignmentSystem.Api
 
 The API listens on `http://localhost:5096` (HTTP) / `https://localhost:7298` (HTTPS) by default — see
 `backend/AssignmentSystem.Api/Properties/launchSettings.json`. Swagger UI is at
-`http://localhost:5096/swagger` — see [`backend/AssignmentSystem.Api/SWAGGER.md`](backend/AssignmentSystem.Api/SWAGGER.md)
+`http://localhost:5096/swagger` — see [`docs/SWAGGER.md`](docs/SWAGGER.md)
 for how it's set up and how to use the JWT "Authorize" flow to test protected endpoints.
 
 ## Running the frontend
@@ -200,7 +200,7 @@ Visit `http://localhost:3000`.
 ## Deploying
 
 Free-tier deployment (Neon + Render + Vercel), including a Dockerfile and Render Blueprint, is
-documented step-by-step in [`DEPLOYMENT.md`](DEPLOYMENT.md).
+documented step-by-step in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Running the tests
 

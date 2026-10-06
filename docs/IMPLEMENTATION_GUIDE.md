@@ -3,7 +3,7 @@
 This explains **how the system was built and how it works internally** — the request flow, the
 patterns used, and why — so a new developer can get oriented without reading every file first. For
 *what* the project does and how to run it, see the root `README.md`. For deployment, see
-`DEPLOYMENT.md`. For Swagger specifically, see `backend/AssignmentSystem.Api/SWAGGER.md`.
+`DEPLOYMENT.md`. For Swagger specifically, see `SWAGGER.md`.
 
 ## Architecture at a glance
 

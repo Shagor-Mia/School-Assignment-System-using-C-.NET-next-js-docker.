@@ -15,3 +15,4 @@ AssignmentSystem.Api/wwwroot/uploads/*
 .vs/
 .vscode/
 *.suo
+.env

@@ -1,22 +1,25 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Lock, Send } from "lucide-react";
 import { createAssignment, getMyTeacherAssignments } from "@/lib/api";
 import { ApiClientError } from "@/lib/api-client";
 import type { TeacherAssignmentDto } from "@/lib/types";
 import { createAssignmentSchema, type CreateAssignmentFormValues } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FieldHint, Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
 import { FieldError } from "@/components/ui/field-error";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { PageSpinner } from "@/components/ui/spinner";
+import { PageHeader } from "@/components/page-header";
 
 export default function NewAssignmentPage() {
   const router = useRouter();
@@ -69,87 +72,122 @@ export default function NewAssignmentPage() {
   if (!mySubjects) return <PageSpinner />;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">New Assignment</h1>
-        <p className="text-sm text-slate-500">Create a new assignment for one of your subjects</p>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-3">
+        <Link
+          href="/teacher/assignments"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to My Assignments
+        </Link>
+        <PageHeader
+          title="New Assignment"
+          description="Compose the details, set a deadline and configure marks for one of your classes."
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" noValidate>
-            {serverError && <Alert variant="error">{serverError}</Alert>}
+      <Card className="space-y-5 p-6">
+        <Alert variant="info">
+          Assignments are visible to enrolled students as soon as they are <strong>Published</strong>. You can
+          also save as Draft to refine later.
+        </Alert>
 
-            {mySubjects.length === 0 && (
-              <Alert variant="info">
-                You are not assigned to any subjects yet. Contact an administrator before creating
-                an assignment.
-              </Alert>
-            )}
+        <form className="space-y-5" noValidate>
+          {serverError && <Alert variant="error">{serverError}</Alert>}
 
+          {mySubjects.length === 0 && (
+            <Alert variant="info" title="No subjects assigned">
+              You are not assigned to any subjects yet. Contact an administrator before creating an
+              assignment.
+            </Alert>
+          )}
+
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" placeholder="e.g. Quarterly English Essay" {...register("title")} />
+            <FieldError message={errors.title?.message} />
+          </div>
+
+          <div>
+            <Label htmlFor="subjectId">Subject &amp; Class</Label>
+            <Select id="subjectId" {...register("subjectId")}>
+              <option value="">Select a subject</option>
+              {mySubjects.map((s) => (
+                <option key={s.subjectId} value={s.subjectId}>
+                  {s.subjectName} ({s.className})
+                </option>
+              ))}
+            </Select>
+            <FieldHint className="flex items-center gap-1">
+              <Lock className="h-3 w-3" /> Showing only the subjects you are allocated to.
+            </FieldHint>
+            <FieldError message={errors.subjectId?.message} />
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description &amp; guidelines</Label>
+            <Textarea
+              id="description"
+              rows={5}
+              placeholder="What should students do? Include word limits, chapters, rubric notes…"
+              {...register("description")}
+            />
+            <FieldError message={errors.description?.message} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" {...register("title")} />
-              <FieldError message={errors.title?.message} />
+              <Label htmlFor="deadline">Submission deadline</Label>
+              <Input id="deadline" type="datetime-local" {...register("deadline")} />
+              <FieldError message={errors.deadline?.message} />
             </div>
-
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" rows={5} {...register("description")} />
-              <FieldError message={errors.description?.message} />
-            </div>
-
-            <div>
-              <Label htmlFor="subjectId">Subject</Label>
-              <Select id="subjectId" {...register("subjectId")}>
-                <option value="">Select a subject</option>
-                {mySubjects.map((s) => (
-                  <option key={s.subjectId} value={s.subjectId}>
-                    {s.subjectName} ({s.className})
-                  </option>
-                ))}
-              </Select>
-              <FieldError message={errors.subjectId?.message} />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="deadline">Deadline</Label>
-                <Input id="deadline" type="datetime-local" {...register("deadline")} />
-                <FieldError message={errors.deadline?.message} />
-              </div>
-              <div>
-                <Label htmlFor="maxMarks">Max marks</Label>
+              <Label htmlFor="maxMarks">Max marks</Label>
+              <div className="relative">
                 <Input
                   id="maxMarks"
                   type="number"
                   step="1"
                   min="1"
+                  className="pr-12"
                   {...register("maxMarks", { valueAsNumber: true })}
                 />
-                <FieldError message={errors.maxMarks?.message} />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500">
+                  PTS
+                </span>
               </div>
+              <FieldError message={errors.maxMarks?.message} />
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                id="allowLateSubmission"
-                type="checkbox"
-                className="h-4 w-4"
-                {...register("allowLateSubmission")}
-              />
-              <Label htmlFor="allowLateSubmission" className="mb-0">
-                Allow late submissions
-              </Label>
-            </div>
+          <label
+            htmlFor="allowLateSubmission"
+            className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4"
+          >
+            <input
+              id="allowLateSubmission"
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 cursor-pointer rounded accent-slate-900"
+              {...register("allowLateSubmission")}
+            />
+            <span>
+              <span className="block text-sm font-semibold text-slate-900">Allow late submissions</span>
+              <span className="block text-xs text-slate-500">
+                Submissions after the deadline are accepted and flagged as Late.
+              </span>
+            </span>
+          </label>
 
-            <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
+            <Link href="/teacher/assignments">
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            </Link>
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 disabled={isSubmitting}
                 onClick={handleSubmit((values) => onSubmit(values, "Draft"))}
               >
@@ -160,11 +198,17 @@ export default function NewAssignmentPage() {
                 disabled={isSubmitting}
                 onClick={handleSubmit((values) => onSubmit(values, "Published"))}
               >
-                {isSubmitting ? "Saving..." : "Publish"}
+                {isSubmitting ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Send /> Publish Assignment
+                  </>
+                )}
               </Button>
             </div>
-          </form>
-        </CardContent>
+          </div>
+        </form>
       </Card>
     </div>
   );

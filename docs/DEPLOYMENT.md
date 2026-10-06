@@ -53,7 +53,7 @@ or the `gh` CLI if you have it authenticated).
    ```
    Host=<host>;Port=5432;Database=<database>;Username=<user>;Password=<password>;SSL Mode=Require;Trust Server Certificate=true
    ```
-   Keep this string — you'll paste it into Render in Step 3 as `ConnectionStrings__DefaultConnection`.
+   Keep this string — you'll paste it into Render in Step 3 as `DB_URL`.
 
 You don't need to run any SQL yourself — the backend runs `Database.Migrate()` and seeds demo data
 automatically the first time it starts up against this database.
@@ -75,7 +75,7 @@ Keep this too — it's the `Jwt__Key` value in Step 3.
    "Blueprint". Select the repo you pushed in Step 0 — Render will detect `render.yaml` at the repo
    root and propose the `assignment-system-api` service.
 2. When prompted for the `sync: false` env vars, fill in:
-   - `ConnectionStrings__DefaultConnection` — the Neon string from Step 1
+   - `DB_URL` — the Neon string from Step 1
    - `Jwt__Key` — the random key from Step 2
    - `Cors__AllowedOrigins__0` — leave a placeholder for now (e.g. `https://placeholder.vercel.app`);
      you'll come back and fix this in Step 5 once the real Vercel URL exists

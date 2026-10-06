@@ -14,12 +14,12 @@ public class SubmissionService : ISubmissionService
     private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5MB
 
     private readonly AppDbContext _context;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IFileStorage _fileStorage;
 
-    public SubmissionService(AppDbContext context, IWebHostEnvironment environment)
+    public SubmissionService(AppDbContext context, IFileStorage fileStorage)
     {
         _context = context;
-        _environment = environment;
+        _fileStorage = fileStorage;
     }
 
     public async Task<List<SubmissionDto>> GetSubmissionsForAssignmentAsync(Guid assignmentId, Guid userId, UserRole role)
@@ -287,29 +287,16 @@ public class SubmissionService : ISubmissionService
             throw new AppValidationException("The uploaded file must not exceed 5MB.");
         }
 
-        var uploadsRoot = Path.Combine(_environment.ContentRootPath, "wwwroot", "uploads");
-        Directory.CreateDirectory(uploadsRoot);
-
         var originalFileName = Path.GetFileName(file.FileName);
-        var storedFileName = $"{Guid.NewGuid()}-{originalFileName}";
-        var fullPath = Path.Combine(uploadsRoot, storedFileName);
-
-        await using (var stream = new FileStream(fullPath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
+        var storedPath = await _fileStorage.SaveAsync(file, originalFileName);
 
         // Clean up the previous file, if any, now that the new one has been saved successfully.
         if (!string.IsNullOrEmpty(submission.FilePath))
         {
-            var oldPath = Path.Combine(uploadsRoot, submission.FilePath);
-            if (File.Exists(oldPath))
-            {
-                try { File.Delete(oldPath); } catch (IOException) { /* best-effort cleanup */ }
-            }
+            await _fileStorage.DeleteAsync(submission.FilePath);
         }
 
-        submission.FilePath = storedFileName;
+        submission.FilePath = storedPath;
         submission.FileName = originalFileName;
     }
 }

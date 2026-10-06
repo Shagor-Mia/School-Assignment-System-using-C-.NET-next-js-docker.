@@ -11,7 +11,7 @@ namespace AssignmentSystem.Api.Tests.Services;
 public class SubmissionServiceTests
 {
     private static SubmissionService CreateService(Data.AppDbContext context) =>
-        new(context, new FakeWebHostEnvironment());
+        new(context, new LocalFileStorage(new FakeWebHostEnvironment()));
 
     // ---- Rule 7: one submission per (student, assignment) — repeat submit upserts, doesn't duplicate ----
 

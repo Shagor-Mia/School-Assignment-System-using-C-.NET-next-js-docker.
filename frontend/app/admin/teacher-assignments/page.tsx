@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { BookOpen, GraduationCap, Plus, UserCheck, UserMinus } from "lucide-react";
 import {
   createTeacherAssignment,
   deleteTeacherAssignment,
@@ -18,10 +18,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
+import { Avatar } from "@/components/ui/avatar";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
 import { FieldError } from "@/components/ui/field-error";
 import { PageSpinner } from "@/components/ui/spinner";
+import { PageHeader } from "@/components/page-header";
+import { Pagination } from "@/components/pagination";
+import { StatCard } from "@/components/stat-card";
+import { StatusPill } from "@/components/status-badge";
 import { Table, TableWrap, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/table";
 
 const PAGE_SIZE = 10;
@@ -59,7 +64,6 @@ export default function AdminTeacherAssignmentsPage() {
   }, []);
 
   const rows = data?.items ?? null;
-  const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1;
 
   async function handleDelete() {
     if (!deleting) return;
@@ -78,14 +82,20 @@ export default function AdminTeacherAssignmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Teacher Assignments</h1>
-          <p className="text-sm text-slate-500">Assign teachers to subjects</p>
-        </div>
-        <Button onClick={() => setCreating(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> New Assignment
-        </Button>
+      <PageHeader
+        title="Teacher Assignments"
+        description="Assign qualified teachers to the subjects they teach."
+        actions={
+          <Button onClick={() => setCreating(true)}>
+            <Plus /> New Assignment
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Teaching assignments" value={data?.totalCount ?? "—"} icon={UserCheck} accent="blue" />
+        <StatCard label="Teachers" value={teachers.length} icon={GraduationCap} accent="amber" />
+        <StatCard label="Subjects" value={subjects.length} icon={BookOpen} accent="indigo" />
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -104,16 +114,31 @@ export default function AdminTeacherAssignmentsPage() {
               </tr>
             </Thead>
             <Tbody>
-              {rows.length === 0 && <EmptyState colSpan={4} message="No teacher assignments yet." />}
+              {rows.length === 0 && (
+                <EmptyState colSpan={4} message="No teacher assignments yet." icon={<UserCheck />} />
+              )}
               {rows.map((r) => (
                 <Tr key={r.id}>
-                  <Td className="font-medium text-slate-900">{r.teacherName}</Td>
+                  <Td>
+                    <div className="flex items-center gap-3">
+                      <Avatar name={r.teacherName} />
+                      <span className="font-medium text-slate-900">{r.teacherName}</span>
+                    </div>
+                  </Td>
                   <Td>{r.subjectName}</Td>
-                  <Td>{r.className}</Td>
+                  <Td>
+                    <StatusPill tone="neutral">{r.className}</StatusPill>
+                  </Td>
                   <Td>
                     <div className="flex justify-end">
-                      <Button variant="ghost" size="sm" onClick={() => setDeleting(r)}>
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove ${r.teacherName} from ${r.subjectName}`}
+                        onClick={() => setDeleting(r)}
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <UserMinus /> Remove
                       </Button>
                     </div>
                   </Td>
@@ -125,29 +150,13 @@ export default function AdminTeacherAssignmentsPage() {
       )}
 
       {data && (
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>
-            Page {data.page} of {totalPages} &middot; {data.totalCount} total
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          totalCount={data.totalCount}
+          noun="teacher assignments"
+          onPageChange={setPage}
+        />
       )}
 
       <CreateAssignmentModal
@@ -164,7 +173,7 @@ export default function AdminTeacherAssignmentsPage() {
       <ConfirmDialog
         open={!!deleting}
         title="Remove assignment"
-        description={`Remove ${deleting?.teacherName} from ${deleting?.subjectName}?`}
+        description={`Remove ${deleting?.teacherName} from ${deleting?.subjectName} (${deleting?.className})?`}
         confirmLabel="Remove"
         loading={actionLoading}
         onConfirm={handleDelete}
@@ -222,9 +231,19 @@ function CreateAssignmentModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="New Teacher Assignment">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="New Teacher Assignment"
+      subtitle="Link a teacher to a subject"
+      icon={<UserCheck />}
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        {serverError && <Alert variant="error">{serverError}</Alert>}
+        {serverError && (
+          <Alert variant="error" title="Could not assign teacher">
+            {serverError}
+          </Alert>
+        )}
         <div>
           <Label htmlFor="ta-teacherId">Teacher</Label>
           <Select id="ta-teacherId" {...register("teacherId")}>
@@ -250,7 +269,7 @@ function CreateAssignmentModal({
           <FieldError message={errors.subjectId?.message} />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

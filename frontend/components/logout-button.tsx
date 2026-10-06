@@ -14,9 +14,9 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
-      <LogOut className="h-4 w-4" />
-      Logout
+    <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout" className="gap-1.5">
+      <LogOut />
+      Exit
     </Button>
   );
 }

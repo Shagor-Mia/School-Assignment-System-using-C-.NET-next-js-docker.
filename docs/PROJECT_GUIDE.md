@@ -341,7 +341,7 @@ dotnet run --project AssignmentSystem.Api
 ```
 
 API চলবে `http://localhost:5096` (HTTP) / `https://localhost:7298` (HTTPS)-এ। Swagger UI:
-`http://localhost:5096/swagger` (JWT "Authorize" ফ্লো ব্যবহার করতে `backend/AssignmentSystem.Api/SWAGGER.md` দেখুন)।
+`http://localhost:5096/swagger` (JWT "Authorize" ফ্লো ব্যবহার করতে `SWAGGER.md` দেখুন)।
 
 ### ধাপ ৩ — ফ্রন্টএন্ড রান করা
 
@@ -511,7 +511,7 @@ submission ফ্লো লাইভ Render + Neon ব্যাকএন্ড�
 
 ## ১৩. আরও পড়ার জন্য (ইংরেজি ফাইল)
 
-- [`README.md`](README.md) — ফিচার, স্ট্যাক, সেটআপ, ডেমো ক্রেডেনশিয়াল (এই ফাইলেরই মূল উৎস, ইংরেজিতে)
+- [`README.md`](../README.md) — ফিচার, স্ট্যাক, সেটআপ, ডেমো ক্রেডেনশিয়াল (এই ফাইলেরই মূল উৎস, ইংরেজিতে)
 - [`IMPLEMENTATION_GUIDE.md`](IMPLEMENTATION_GUIDE.md) — কোড লেভেলের গভীর ব্যাখ্যা, রিকোয়েস্ট ফ্লো
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — হোস্টিং-এর সম্পূর্ণ স্টেপ-বাই-স্টেপ গাইড
-- [`backend/AssignmentSystem.Api/SWAGGER.md`](backend/AssignmentSystem.Api/SWAGGER.md) — Swagger-এ JWT দিয়ে টেস্ট করার নিয়ম
+- [`SWAGGER.md`](SWAGGER.md) — Swagger-এ JWT দিয়ে টেস্ট করার নিয়ম

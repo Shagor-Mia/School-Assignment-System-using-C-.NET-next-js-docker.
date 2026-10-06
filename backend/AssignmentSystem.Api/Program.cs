@@ -14,6 +14,10 @@ using Serilog;
 
 const string CorsPolicyName = "NextJsFrontend";
 
+// Local dev: load secrets from backend/AssignmentSystem.Api/.env when it exists. Deployed (Render)
+// has no .env file; config comes from real environment variables there.
+if (File.Exists(".env")) DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Listen on $PORT when present (Render/Fly/Heroku-style platforms inject this; falls back to
@@ -35,7 +39,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfig
 
 // ---- EF Core / Npgsql ----
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration["DB_URL"] ?? builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ---- Controllers + JSON (string enums) ----
 builder.Services.AddControllers()
@@ -124,9 +128,25 @@ builder.Services.AddScoped<ITeacherAssignmentService, TeacherAssignmentService>(
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 
+// ---- File storage: Cloudinary when configured, otherwise local wwwroot/uploads ----
+var cloudinarySection = builder.Configuration.GetSection("Cloudinary");
+if (!string.IsNullOrWhiteSpace(cloudinarySection["CloudName"])
+    && !string.IsNullOrWhiteSpace(cloudinarySection["ApiKey"])
+    && !string.IsNullOrWhiteSpace(cloudinarySection["ApiSecret"]))
+{
+    var cloudinary = new CloudinaryDotNet.Cloudinary(new CloudinaryDotNet.Account(
+        cloudinarySection["CloudName"], cloudinarySection["ApiKey"], cloudinarySection["ApiSecret"])) { Api = { Secure = true } };
+    builder.Services.AddSingleton(cloudinary);
+    builder.Services.AddScoped<IFileStorage, CloudinaryFileStorage>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+}
+
 var app = builder.Build();
 
-// ---- Migrate + seed on startup (idempotent) ----
+// ---- Migrate on startup (idempotent). All data lives in PostgreSQL; the app seeds nothing. ----
 // Skipped in the "Testing" environment: WebApplicationFactory-based integration tests swap in a
 // Sqlite in-memory AppDbContext and call Database.EnsureCreated() themselves instead, since applying
 // Npgsql-generated migrations against a different provider isn't a supported scenario.
@@ -135,12 +155,6 @@ if (!app.Environment.IsEnvironment("Testing"))
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
-    await DbSeeder.SeedAsync(db);
-
-    if (app.Environment.IsDevelopment())
-    {
-        await DbSeeder.SeedBulkDemoDataAsync(db, app.Environment.ContentRootPath);
-    }
 }
 
 // Trust the reverse proxy's X-Forwarded-Proto/X-Forwarded-For headers (Render, Fly, most container

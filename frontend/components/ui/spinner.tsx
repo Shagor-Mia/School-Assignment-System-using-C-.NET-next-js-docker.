@@ -7,8 +7,8 @@ export function Spinner({ className }: { className?: string }) {
 
 export function PageSpinner() {
   return (
-    <div className="flex w-full items-center justify-center py-16">
-      <Spinner className="h-8 w-8" />
+    <div role="status" aria-label="Loading" className="flex w-full items-center justify-center py-20">
+      <Spinner className="h-7 w-7" />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, Filter, Library, Pencil, Plus, School, Trash2 } from "lucide-react";
 import { createSubject, deleteSubject, getClasses, getSubjects, updateSubject } from "@/lib/api";
 import { ApiClientError } from "@/lib/api-client";
 import type { ClassDto, PagedResult, SubjectDto } from "@/lib/types";
@@ -22,12 +22,16 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
 import { FieldError } from "@/components/ui/field-error";
 import { PageSpinner } from "@/components/ui/spinner";
+import { PageHeader } from "@/components/page-header";
+import { Pagination } from "@/components/pagination";
+import { StatCard } from "@/components/stat-card";
 import { Table, TableWrap, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/table";
 
 const PAGE_SIZE = 10;
 
 export default function AdminSubjectsPage() {
   const [data, setData] = React.useState<PagedResult<SubjectDto> | null>(null);
+  const [totalAll, setTotalAll] = React.useState<number | null>(null);
   const [classes, setClasses] = React.useState<ClassDto[]>([]);
   const [classFilter, setClassFilter] = React.useState("");
   const [page, setPage] = React.useState(1);
@@ -47,6 +51,7 @@ export default function AdminSubjectsPage() {
           pageSize: PAGE_SIZE,
         })
       );
+      getSubjects({ page: 1, pageSize: 1 }).then((r) => setTotalAll(r.totalCount)).catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load subjects.");
     }
@@ -61,7 +66,7 @@ export default function AdminSubjectsPage() {
   }, []);
 
   const subjects = data?.items ?? null;
-  const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1;
+  const filteredClass = classes.find((c) => c.id === classFilter);
 
   async function handleDelete() {
     if (!deleting) return;
@@ -80,31 +85,58 @@ export default function AdminSubjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Subjects</h1>
-          <p className="text-sm text-slate-500">Manage subjects per class</p>
-        </div>
-        <Button onClick={() => setCreating(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> New Subject
-        </Button>
+      <PageHeader
+        title="Subjects"
+        description="Curriculum subjects mapped across classes."
+        actions={
+          <Button onClick={() => setCreating(true)}>
+            <Plus /> New Subject
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Total subjects" value={totalAll ?? "—"} icon={Library} accent="indigo" />
+        <StatCard
+          label={filteredClass ? filteredClass.name : "Showing"}
+          value={data?.totalCount ?? "—"}
+          icon={Filter}
+          accent="blue"
+          sub={filteredClass ? "Subjects in selected class" : "All classes"}
+        />
+        <StatCard label="Classes" value={classes.length} icon={School} accent="cyan" />
       </div>
 
-      <Select
-        value={classFilter}
-        onChange={(e) => {
-          setPage(1);
-          setClassFilter(e.target.value);
-        }}
-        className="w-56"
-      >
-        <option value="">All classes</option>
-        {classes.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </Select>
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-card">
+        <Select
+          aria-label="Filter by class"
+          value={classFilter}
+          onChange={(e) => {
+            setPage(1);
+            setClassFilter(e.target.value);
+          }}
+          className="w-full sm:w-64"
+        >
+          <option value="">All classes</option>
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+        {classFilter && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setPage(1);
+              setClassFilter("");
+            }}
+          >
+            Reset
+          </Button>
+        )}
+      </div>
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -115,26 +147,49 @@ export default function AdminSubjectsPage() {
           <Table>
             <Thead>
               <tr>
-                <Th>Name</Th>
+                <Th>Subject</Th>
                 <Th>Code</Th>
                 <Th>Class</Th>
                 <Th className="text-right">Actions</Th>
               </tr>
             </Thead>
             <Tbody>
-              {subjects.length === 0 && <EmptyState colSpan={4} message="No subjects yet." />}
+              {subjects.length === 0 && (
+                <EmptyState colSpan={4} message="No subjects yet." icon={<BookOpen />} />
+              )}
               {subjects.map((s) => (
                 <Tr key={s.id}>
-                  <Td className="font-medium text-slate-900">{s.name}</Td>
-                  <Td>{s.code}</Td>
+                  <Td>
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                        <BookOpen className="h-4 w-4" />
+                      </span>
+                      <span className="font-medium text-slate-900">{s.name}</span>
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700">
+                      {s.code}
+                    </span>
+                  </Td>
                   <Td>{s.className}</Td>
                   <Td>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(s)}>
-                        <Pencil className="h-4 w-4" />
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Edit ${s.name}`}
+                        onClick={() => setEditing(s)}
+                      >
+                        <Pencil />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeleting(s)}>
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete ${s.name}`}
+                        onClick={() => setDeleting(s)}
+                      >
+                        <Trash2 className="text-red-600" />
                       </Button>
                     </div>
                   </Td>
@@ -146,29 +201,13 @@ export default function AdminSubjectsPage() {
       )}
 
       {data && (
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>
-            Page {data.page} of {totalPages} &middot; {data.totalCount} total
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          pageSize={data.pageSize}
+          totalCount={data.totalCount}
+          noun="subjects"
+          onPageChange={setPage}
+        />
       )}
 
       <CreateSubjectModal
@@ -249,17 +288,23 @@ function CreateSubjectModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="New Subject">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="New Subject"
+      subtitle="Map a subject to a class"
+      icon={<BookOpen />}
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError && <Alert variant="error">{serverError}</Alert>}
         <div>
           <Label htmlFor="subject-name">Name</Label>
-          <Input id="subject-name" {...register("name")} />
+          <Input id="subject-name" placeholder="e.g. Elementary Mathematics" {...register("name")} />
           <FieldError message={errors.name?.message} />
         </div>
         <div>
           <Label htmlFor="subject-code">Code</Label>
-          <Input id="subject-code" {...register("code")} />
+          <Input id="subject-code" placeholder="e.g. MAT-103" {...register("code")} />
           <FieldError message={errors.code?.message} />
         </div>
         <div>
@@ -274,7 +319,7 @@ function CreateSubjectModal({
           <FieldError message={errors.classId?.message} />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -331,7 +376,13 @@ function EditSubjectModal({
   }
 
   return (
-    <Modal open={!!subject} onClose={onClose} title="Edit Subject">
+    <Modal
+      open={!!subject}
+      onClose={onClose}
+      title="Edit Subject"
+      subtitle={subject?.className}
+      icon={<Pencil />}
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError && <Alert variant="error">{serverError}</Alert>}
         <div>
@@ -345,7 +396,7 @@ function EditSubjectModal({
           <FieldError message={errors.code?.message} />
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

@@ -90,7 +90,9 @@ public static class MappingExtensions
             StudentName = submission.Student?.FullName ?? string.Empty,
             AnswerText = submission.AnswerText,
             FileName = submission.FileName,
-            FileUrl = submission.FilePath is null ? null : $"/uploads/{submission.FilePath}",
+            FileUrl = submission.FilePath is null ? null
+                : submission.FilePath.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? submission.FilePath
+                : $"/uploads/{submission.FilePath}",
             SubmittedAt = submission.SubmittedAt,
             UpdatedAt = submission.UpdatedAt,
             Status = submission.Status.ToString(),

@@ -1,4 +1,4 @@
-# Render Blueprint for the backend API. See DEPLOYMENT.md for the full step-by-step walkthrough
+# Render Blueprint for the backend API. See docs/DEPLOYMENT.md for the full step-by-step walkthrough
 # (this file alone doesn't configure Neon/Vercel/env var values — those still need manual setup).
 #
 # https://render.com/docs/blueprint-spec
@@ -16,7 +16,7 @@ services:
         value: Production
       # Set these manually in the Render dashboard (Environment tab) instead of committing real
       # values here — `sync: false` means "Render will prompt for this, not read it from this file".
-      - key: ConnectionStrings__DefaultConnection
+      - key: DB_URL
         sync: false
       - key: Jwt__Key
         sync: false
@@ -27,7 +27,7 @@ services:
       - key: Jwt__ExpiryHours
         value: "4"
       # The deployed Vercel frontend URL, e.g. https://your-app.vercel.app — set after the frontend
-      # is deployed (see DEPLOYMENT.md step 4). Add a second Cors__AllowedOrigins__1 var the same way
+      # is deployed (see docs/DEPLOYMENT.md step 4). Add a second Cors__AllowedOrigins__1 var the same way
       # if you also need to allow a Vercel preview-deployment URL.
       - key: Cors__AllowedOrigins__0
         sync: false
