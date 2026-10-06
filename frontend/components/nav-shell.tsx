@@ -13,6 +13,7 @@ import {
   School,
   BookOpen,
   UserCheck,
+  UserCircle,
   Users,
   X,
   type LucideIcon,
@@ -32,6 +33,7 @@ const ICONS = {
   teacherAssignments: UserCheck,
   assignments: ClipboardList,
   myAssignments: FileText,
+  profile: UserCircle,
 } satisfies Record<string, LucideIcon>;
 
 export type NavIcon = keyof typeof ICONS;
@@ -79,6 +81,8 @@ export function NavShell({ items, roleLabel, roleTitle, children }: NavShellProp
     return best;
   }, null);
 
+  const profileHref = `/${roleLabel.toLowerCase()}/profile`;
+
   const nav = (
     <nav aria-label="Primary" className="flex flex-1 flex-col gap-1 px-3 py-4">
       {items.map((item) => {
@@ -106,10 +110,10 @@ export function NavShell({ items, roleLabel, roleTitle, children }: NavShellProp
 
   const userBlock = (
     <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-4 py-3">
-      <div className="min-w-0">
+      <Link href={profileHref} aria-label="My profile" className="min-w-0 flex-1 rounded-lg hover:opacity-80">
         <p className="truncate text-sm font-semibold text-slate-900">{user?.fullName ?? " "}</p>
         <p className="truncate text-xs text-slate-500">{roleTitle}</p>
-      </div>
+      </Link>
       <LogoutButton />
     </div>
   );
@@ -177,7 +181,9 @@ export function NavShell({ items, roleLabel, roleTitle, children }: NavShellProp
               </span>
               <span className="block text-xs text-slate-500">{roleTitle}</span>
             </span>
-            <Avatar name={user?.fullName} tone="dark" size="md" />
+            <Link href={profileHref} aria-label="My profile" className="rounded-full hover:opacity-80">
+              <Avatar name={user?.fullName} tone="dark" size="md" />
+            </Link>
           </div>
         </header>
 

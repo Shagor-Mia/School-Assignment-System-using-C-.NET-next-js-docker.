@@ -38,4 +38,30 @@ public class AuthService : IAuthService
             User = user.ToDto()
         };
     }
+
+    public async Task<UserDto> GetCurrentUserAsync(Guid userId)
+    {
+        var user = await _context.Users
+            .Include(u => u.Class)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive)
+            ?? throw new NotFoundException("User not found.");
+
+        return user.ToDto();
+    }
+
+    public async Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive)
+            ?? throw new NotFoundException("User not found.");
+
+        if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+        {
+            throw new AppValidationException(
+                "Current password is incorrect.",
+                new Dictionary<string, string[]> { ["currentPassword"] = new[] { "Current password is incorrect." } });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+    }
 }

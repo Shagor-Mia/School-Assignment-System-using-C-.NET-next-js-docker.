@@ -7,6 +7,7 @@ const items: NavItem[] = [
   { href: "/admin/subjects", label: "Subjects", icon: "subjects" },
   { href: "/admin/teacher-assignments", label: "Teacher Assignments", icon: "teacherAssignments" },
   { href: "/admin/assignments", label: "Assignments", icon: "assignments" },
+  { href: "/admin/profile", label: "My Profile", icon: "profile" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

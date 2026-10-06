@@ -119,3 +119,19 @@ export function makeGradeSubmissionSchema(maxMarks: number) {
 export type GradeSubmissionFormValues = z.infer<ReturnType<typeof makeGradeSubmissionSchema>>;
 
 export const MAX_UPLOAD_SIZE_BYTES = MAX_FILE_SIZE_BYTES;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required."),
+    newPassword: z.string().min(6, "New password must be at least 6 characters."),
+    confirmPassword: z.string().min(1, "Please confirm the new password."),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    message: "New password must be different from the current one.",
+    path: ["newPassword"],
+  });
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;

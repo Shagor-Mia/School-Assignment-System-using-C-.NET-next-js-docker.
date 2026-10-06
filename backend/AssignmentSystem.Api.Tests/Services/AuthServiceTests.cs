@@ -87,4 +87,51 @@ public class AuthServiceTests
 
         await act.Should().ThrowAsync<UnauthorizedAppException>();
     }
+
+    [Fact]
+    public async Task GetCurrentUser_ReturnsProfile()
+    {
+        using var factory = new SqliteContextFactory();
+        using var context = factory.CreateContext();
+        var user = TestData.CreateUser("Jane Teacher", "teacher@test.local", UserRole.Teacher);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).GetCurrentUserAsync(user.Id);
+
+        result.Email.Should().Be("teacher@test.local");
+        result.FullName.Should().Be("Jane Teacher");
+    }
+
+    [Fact]
+    public async Task ChangePassword_CorrectCurrentPassword_UpdatesHash()
+    {
+        using var factory = new SqliteContextFactory();
+        using var context = factory.CreateContext();
+        var user = TestData.CreateUser("Jane Teacher", "teacher@test.local", UserRole.Teacher);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("OldPassword1");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+        await service.ChangePasswordAsync(user.Id, "OldPassword1", "NewPassword1");
+
+        var login = await service.LoginAsync("teacher@test.local", "NewPassword1");
+        login.Token.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task ChangePassword_WrongCurrentPassword_Throws()
+    {
+        using var factory = new SqliteContextFactory();
+        using var context = factory.CreateContext();
+        var user = TestData.CreateUser("Jane Teacher", "teacher@test.local", UserRole.Teacher);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("OldPassword1");
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var act = () => CreateService(context).ChangePasswordAsync(user.Id, "WrongPassword", "NewPassword1");
+
+        await act.Should().ThrowAsync<AppValidationException>();
+    }
 }

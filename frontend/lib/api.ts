@@ -169,3 +169,12 @@ async function apiPostFormAsPut<T>(path: string, formData: FormData): Promise<T>
   }
   return body as T;
 }
+
+// --- Auth / profile ---
+
+export function getMe() {
+  return apiGet<UserDto>("auth/me");
+}
+export function changePassword(data: { currentPassword: string; newPassword: string }) {
+  return apiPost<void>("auth/change-password", data);
+}
