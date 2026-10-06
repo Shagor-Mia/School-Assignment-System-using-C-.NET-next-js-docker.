@@ -92,6 +92,7 @@ export default function GradeSubmissionPage() {
   async function onGradeSubmit(values: GradeSubmissionFormValues) {
     setGradeServerError(null);
     setGradeSuccess(false);
+    setStatusSuccess(false);
     try {
       const updated = await gradeSubmission(submissionId, {
         marks: values.marks,
@@ -114,6 +115,7 @@ export default function GradeSubmissionPage() {
     setStatusSaving(true);
     setStatusError(null);
     setStatusSuccess(false);
+    setGradeSuccess(false);
     try {
       const updated = await updateSubmissionStatus(submissionId, { status: statusValue });
       setSubmission(updated);

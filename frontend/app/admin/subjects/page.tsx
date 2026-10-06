@@ -44,14 +44,18 @@ export default function AdminSubjectsPage() {
   const load = React.useCallback(async () => {
     setError(null);
     try {
-      setData(
-        await getSubjects({
-          classId: classFilter || undefined,
-          page,
-          pageSize: PAGE_SIZE,
-        })
-      );
-      getSubjects({ page: 1, pageSize: 1 }).then((r) => setTotalAll(r.totalCount)).catch(() => {});
+      const result = await getSubjects({
+        classId: classFilter || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      });
+      setData(result);
+      if (classFilter) {
+        getSubjects({ page: 1, pageSize: 1 }).then((r) => setTotalAll(r.totalCount)).catch(() => {});
+      } else {
+        // Unfiltered result already carries the overall count; avoids a second (stale-prone) request.
+        setTotalAll(result.totalCount);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load subjects.");
     }

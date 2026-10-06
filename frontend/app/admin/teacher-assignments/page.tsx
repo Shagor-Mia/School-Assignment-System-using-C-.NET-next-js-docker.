@@ -260,7 +260,13 @@ function CreateAssignmentModal({
           <Label htmlFor="ta-subjectId">Subject</Label>
           <Select id="ta-subjectId" {...register("subjectId")}>
             {subjects.length === 0 && <option value="">No subjects available</option>}
-            {subjects.map((s) => (
+            {[...subjects]
+              .sort(
+                (x, y) =>
+                  x.name.localeCompare(y.name) ||
+                  x.className.localeCompare(y.className, undefined, { numeric: true })
+              )
+              .map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} ({s.className})
               </option>

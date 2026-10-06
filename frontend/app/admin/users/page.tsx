@@ -389,7 +389,7 @@ function CreateUserModal({
         {role === "Student" && (
           <div>
             <Label htmlFor="classId">Class</Label>
-            <Select id="classId" {...register("classId")}>
+            <Select id="classId" aria-invalid={errors.classId ? true : undefined} {...register("classId")}>
               <option value="">Select a class</option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -397,6 +397,7 @@ function CreateUserModal({
                 </option>
               ))}
             </Select>
+            <FieldError message={errors.classId?.message} />
           </div>
         )}
         <div className="flex justify-end gap-2 pt-2">
@@ -508,7 +509,7 @@ function EditUserModal({
         {role === "Student" && (
           <div>
             <Label htmlFor="edit-classId">Class</Label>
-            <Select id="edit-classId" {...register("classId")}>
+            <Select id="edit-classId" aria-invalid={errors.classId ? true : undefined} {...register("classId")}>
               <option value="">Select a class</option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -516,6 +517,7 @@ function EditUserModal({
                 </option>
               ))}
             </Select>
+            <FieldError message={errors.classId?.message} />
           </div>
         )}
         <div className="flex items-center gap-2.5 rounded-lg bg-slate-50 px-3 py-2.5">

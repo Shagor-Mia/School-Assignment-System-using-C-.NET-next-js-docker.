@@ -17,6 +17,9 @@ export const createUserSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
   role: roleEnum,
   classId: z.string().nullable(),
+}).refine((v) => v.role !== "Student" || !!v.classId, {
+  message: "Please select a class for the student.",
+  path: ["classId"],
 });
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
@@ -26,6 +29,9 @@ export const updateUserSchema = z.object({
   role: roleEnum,
   classId: z.string().nullable(),
   isActive: z.boolean(),
+}).refine((v) => v.role !== "Student" || !!v.classId, {
+  message: "Please select a class for the student.",
+  path: ["classId"],
 });
 export type UpdateUserFormValues = z.infer<typeof updateUserSchema>;
 
@@ -123,7 +129,7 @@ export const MAX_UPLOAD_SIZE_BYTES = MAX_FILE_SIZE_BYTES;
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required."),
-    newPassword: z.string().min(6, "New password must be at least 6 characters."),
+    newPassword: z.string().min(8, "New password must be at least 8 characters."),
     confirmPassword: z.string().min(1, "Please confirm the new password."),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {

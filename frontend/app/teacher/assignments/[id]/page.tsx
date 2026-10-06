@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,9 +14,11 @@ import {
   Save,
   Send,
   SlidersHorizontal,
+  Trash2,
   Users,
 } from "lucide-react";
 import {
+  deleteAssignment,
   getAssignment,
   getAssignmentSubmissions,
   publishAssignment,
@@ -39,6 +41,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageSpinner } from "@/components/ui/spinner";
 import { Breadcrumbs } from "@/components/page-header";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { StatCard } from "@/components/stat-card";
 import { Table, TableWrap, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/table";
 
@@ -62,6 +65,7 @@ const FILTERS: Record<SubFilter, (s: SubmissionDto) => boolean> = {
 export default function TeacherAssignmentDetailPage() {
   const params = useParams<{ id: string }>();
   const assignmentId = params.id;
+  const router = useRouter();
 
   const [assignment, setAssignment] = React.useState<AssignmentDto | null>(null);
   const [submissions, setSubmissions] = React.useState<SubmissionDto[] | null>(null);
@@ -69,6 +73,8 @@ export default function TeacherAssignmentDetailPage() {
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState(false);
   const [publishing, setPublishing] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   const [filter, setFilter] = React.useState<SubFilter>("all");
 
   const {
@@ -147,6 +153,19 @@ export default function TeacherAssignmentDetailPage() {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true);
+    setServerError(null);
+    try {
+      await deleteAssignment(assignmentId);
+      router.push("/teacher/assignments");
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : "Failed to delete assignment.");
+      setConfirmDelete(false);
+      setDeleting(false);
+    }
+  }
+
   const stats = React.useMemo(() => {
     const subs = submissions ?? [];
     const graded = subs.filter((s) => s.status === "Graded");
@@ -190,17 +209,22 @@ export default function TeacherAssignmentDetailPage() {
               <span>Max marks: {assignment.maxMarks}</span>
             </p>
           </div>
-          {assignment.status === "Draft" && (
-            <Button onClick={handlePublish} disabled={publishing}>
-              {publishing ? (
-                "Publishing..."
-              ) : (
-                <>
-                  <Send /> Publish
-                </>
-              )}
+          <div className="flex flex-wrap items-center gap-2">
+            {assignment.status === "Draft" && (
+              <Button onClick={handlePublish} disabled={publishing}>
+                {publishing ? (
+                  "Publishing..."
+                ) : (
+                  <>
+                    <Send /> Publish
+                  </>
+                )}
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setConfirmDelete(true)} aria-label="Delete assignment">
+              <Trash2 /> Delete
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
@@ -389,6 +413,21 @@ export default function TeacherAssignmentDetailPage() {
           </TableWrap>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete assignment"
+        description={`Are you sure you want to delete "${assignment.title}"? This cannot be undone.`}
+        note={
+          stats.total > 0
+            ? `This will also permanently delete ${stats.total} student submission${stats.total === 1 ? "" : "s"} and their grades.`
+            : "No student submissions will be affected."
+        }
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }
